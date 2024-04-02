@@ -3,6 +3,7 @@ import ViteExpress from "vite-express";
 import bodyParser from "body-parser";
 import Session from 'express-session';
 
+import 'dotenv/config'
 import cors from "cors";
 import Datastore from "nedb";
 import routes from './routes';

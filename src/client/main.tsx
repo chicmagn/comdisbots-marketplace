@@ -8,10 +8,10 @@ import Web3Provider from './Web3Provider.js'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    {/* <Web3Provider> */}
+    <Web3Provider>
       <ChakraProvider theme={theme}>
         <App/>
       </ChakraProvider>
-    {/* </Web3Provider> */}
+    </Web3Provider>
   </React.StrictMode>,
 )
