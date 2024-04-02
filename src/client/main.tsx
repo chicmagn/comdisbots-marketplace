@@ -4,12 +4,14 @@ import App from './App.tsx'
 import './index.css'
 import { ChakraProvider } from '@chakra-ui/react'
 import theme from './theme.ts'
-
+import Web3Provider from './Web3Provider.js'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  // <React.StrictMode>
-    <ChakraProvider theme={theme}>
-      <App/>
-    </ChakraProvider>
-  // </React.StrictMode>,
+  <React.StrictMode>
+    {/* <Web3Provider> */}
+      <ChakraProvider theme={theme}>
+        <App/>
+      </ChakraProvider>
+    {/* </Web3Provider> */}
+  </React.StrictMode>,
 )

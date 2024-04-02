@@ -19,7 +19,6 @@ const BotList = (props: any) => {
         axios.get(url).then((response: any)=> {
             const data = response.data;
             if (data.success){
-                // console.log(data.bots)
                 setBots(data.bots);
                 // toast({
                 //     title: 'Your bots',
