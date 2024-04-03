@@ -11,7 +11,7 @@ type Props = {
     selected: boolean
 }
 
-const Account: React.FC<Props> = ({account, selected, onSelect}) => {
+const PolkadotAccount: React.FC<Props> = ({account, selected, onSelect}) => {
     const addressString = account.address;
     const { resolve } = useAzeroID();
     const a0id = useMemo(()=>
@@ -31,4 +31,4 @@ const Account: React.FC<Props> = ({account, selected, onSelect}) => {
     )
 }
 
-export default Account;
+export default PolkadotAccount;

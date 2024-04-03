@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react"
-import { web3FromSource } from "@polkadot/extension-dapp"
-import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types"
-import { useAzeroID } from "../../common/AzeroIDResolver"
-import { Address, SiwsMessage } from "@talismn/siws"
+import { SiweMessage } from 'siwe';
+import { BrowserProvider } from 'ethers';
 import Account from "./Account"
 import {
     Box, Button, useDisclosure,
@@ -19,68 +17,78 @@ import {
 import axios from "axios";
 
 type Props = {
-    accounts: InjectedAccountWithMeta[]
+    accounts: any[]
     onCancel: () => void
-    onSignedIn: (account: InjectedAccountWithMeta, jwtToken: string) => void
+    onSignedIn: (account: any) => void
 }
 
-export const PolkadotSignIn: React.FC<Props> = ({ accounts, onCancel, onSignedIn }) => {
+export const EvmSignIn: React.FC<Props> = ({ accounts, onCancel, onSignedIn }) => {
     // const { dismiss, toast } = useToast()
-    const { resolve } = useAzeroID()
-    const { isOpen, onOpen, onClose } = useDisclosure()
-
+    const { isOpen, onOpen, onClose } = useDisclosure();
+    const domain = window.location.host;
+    const origin = window.location.origin;
+    const evmProvider = new BrowserProvider(window.ethereum);
     // auto select if only 1 account is connected
-    const [selectedAccount, setSelectedAccount] = useState<InjectedAccountWithMeta | undefined>(
+    const [selectedAccount, setSelectedAccount] = useState<any | undefined>(
         accounts.length === 1 ? accounts[0] : undefined
     )
     const [signingIn, setSigningIn] = useState(false)
+
+    const createSiweMessage = async (address: any, statement: any) => {
+        const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/auth/nonce`, {
+            credentials: 'include',
+        });
+        const message = new SiweMessage({
+            domain,
+            address,
+            statement,
+            uri: origin,
+            version: '1',
+            chainId: 1,
+            nonce: await res.text()
+        });
+        return message.prepareMessage();
+    }
+
+    const getInformation = async () => {
+        const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/auth/userInfo`, {
+            credentials: 'include',
+        });
+        console.log(await res.text());
+    }
 
     const handleSignIn = async () => {
         try {
             // dismiss()
             if (!selectedAccount) throw new Error("No account selected!")
-
-            const address = Address.fromSs58(selectedAccount.address ?? "")
+            const address = selectedAccount;
             if (!address) {
                 //   return toast({
                 //     title: "Invalid address",
                 //     description: "Your address is not a valid Substrate address.",
                 //   })
-                console.log("Your address is not a valid Substrate address.")
+                console.log("Your address is not a valid EVM address.")
                 return;
             }
-            setSigningIn(true)
-            // request nonce from server
-            // const nonceRes = await fetch("/api/nonce")
-            const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/auth/nonce`, {
-                credentials: 'include',
+            setSigningIn(true);
+            const signer = await evmProvider.getSigner();
+            const message = await createSiweMessage(
+                await signer.getAddress(),
+                'Sign in with Ethereum to Commune Discord Bot Marketplace'
+            );
+            const signature = await signer.signMessage(message);
+
+            const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/auth/verifyEVM`, {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message, signature }),
+                credentials: 'include'
             });
-            const nonce = await res.text();
-
-            const siwsMessage = new SiwsMessage({
-                domain: window.location.host,
-                uri: `https://${window.location.host}`,
-                address: address.toSs58(0),
-                nonce,
-                statement: "Welcome to SIWS! Sign in to see how it works.",
-                chainName: "Polkadot",
-                // expires in 2 mins
-                expirationTime: new Date().getTime() + 2 * 60 * 1000,
-                azeroId: resolve(address.toSs58())?.a0id,
-            })
-
-            const injectedExtension = await web3FromSource(selectedAccount.meta.source)
-            const signed = await siwsMessage.sign(injectedExtension)
-            const verifyRes = await axios.post(`${import.meta.env.VITE_SERVER_URL}/auth/verifyPolkadot`, {
-                ...signed, address: address.toSs58(0), nonce: nonce
-            })
-            
-            const verified = verifyRes.data
-            console.log(verified)
-            if (verified.error) throw new Error(verified.error)
 
             // Hooray we're signed in!
-            onSignedIn(selectedAccount, verified.jwtToken)
+            onSignedIn(selectedAccount)
 
             onClose();
         } catch (e: any) {
@@ -106,9 +114,11 @@ export const PolkadotSignIn: React.FC<Props> = ({ accounts, onCancel, onSignedIn
         // () => dismiss()
     }, [])
 
+    
+
     return (
         <Box>
-            <Button onClick={onOpen} colorScheme="blue">Sign In with Polkadot</Button>
+            <Button onClick={onOpen} colorScheme="blue">Sign In with EVM</Button>
             <Modal isOpen={isOpen} onClose={onClose}>
                 <ModalOverlay />
                 <ModalContent bg={'discord.800'}>
@@ -118,9 +128,9 @@ export const PolkadotSignIn: React.FC<Props> = ({ accounts, onCancel, onSignedIn
                         {accounts.length > 0 ? (
                             accounts.map((account) => (
                                 <Account
-                                    key={account.address}
+                                    key={account}
                                     account={account}
-                                    selected={selectedAccount?.address === account.address}
+                                    selected={selectedAccount === account}
                                     onSelect={() => {
                                         // dismiss()
                                         setSelectedAccount(account);

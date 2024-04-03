@@ -8,16 +8,15 @@ import githubLogo from '/github.svg'
 import { useCallback, useEffect, useState } from 'react';
 import { useCookies } from "react-cookie"
 import { useNavigate } from 'react-router-dom';
-import { SiweMessage } from 'siwe';
 import truncateEthAddress from 'truncate-eth-address';
 import { web3Accounts, web3Enable, web3FromAddress, web3FromSource, web3AccountsSubscribe } from '@polkadot/extension-dapp';
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types"
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { EvmConnectButton} from '../evm/WalletConnect';
 import { PolkadotConnectButton } from '../polkadot/WalletConnect';
-import { Profile } from '../polkadot/Profile';
-import { SignIn } from '../polkadot/SignInButton';
-import { BrowserProvider } from 'ethers';
-import { useAccount, useSignMessage } from "wagmi";
+import { PolkadotProfile } from '../polkadot/Profile';
+import { EvmProfile } from '../evm/Profile';
+import { PolkadotSignIn } from '../polkadot/SignInButton';
+import { EvmSignIn } from '../evm/SignInButton';
 
 const Header = () => {
     const url = `${import.meta.env.VITE_DISCORD_AUTH_URL}`;
@@ -69,64 +68,24 @@ const Header = () => {
     }, [polkadotAccounts, handlePolkadotSignOut, polkadotSignedInWith?.address])
 
     // EVM
-    const domain = window.location.host;
-    const origin = window.location.origin;
-    const evmProvider = new BrowserProvider(window.ethereum);
+    const [evmSignedInWith, setEvmSignedInWith] = useState<any>(undefined);
+    const [evmAccounts, setEvmAccounts] = useState<any[]>();
 
-    const { isConnected, address } = useAccount();
-    const handleEvmSignIn = ()=> {
-        // console.log(isConnected, address)
-        evmProvider.send('eth_requestAccounts', []).then(async (data) => {
-            const signer = await evmProvider.getSigner();
-            const message = await createSiweMessage(
-                await signer.getAddress(),
-                'Sign in with Ethereum to Commune Discord Bot Marketplace'
-            );
-            const signature = await signer.signMessage(message);
+    // const { isConnected, address } = useAccount();
 
-            const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/auth/verifyEVM`, {
-                method: "POST",
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ message, signature }),
-                credentials: 'include'
-            });
-            console.log(await res.text());
-        }).catch(() => {
-            console.log('user rejected request');
-            // setIsEVMConnected(false);
-            
-        });
-    };
-    useEffect(()=> {
-      if (isConnected) {
-        handleEvmSignIn();  
-      }
-    }, [isConnected, address]);
-
-    const createSiweMessage = async (address: any, statement: any) => {
-        const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/auth/nonce`, {
-            credentials: 'include',
-        });
-        const message = new SiweMessage({
-            domain,
-            address,
-            statement,
-            uri: origin,
-            version: '1',
-            chainId: 1,
-            nonce: await res.text()
-        });
-        return message.prepareMessage();
+    const handleEvmSignedIn = (selectedAccount: any) => {
+        // setJwtToken(jwtToken)
+        setEvmSignedInWith(selectedAccount)
     }
 
-    const getInformation = async () => {
-        const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/auth/userInfo`, {
-            credentials: 'include',
-        });
-        console.log(await res.text());
-    }
+    const handleEvmSignOut = useCallback(() => {
+        setEvmSignedInWith(undefined)
+        // setJwtToken(undefined)
+    }, [])
+
+    const onEvmAccounts = useCallback((accounts: any[])=> {
+        setEvmAccounts(accounts);
+    }, []);
 
     // Discord
     const [username, setUsername] = useState('');
@@ -197,9 +156,9 @@ const Header = () => {
                     }
                     {polkadotSignedInWith && !!jwtToken ? 
                         (
-                            <Profile account={polkadotSignedInWith} jwtToken={jwtToken} onSignOut={handlePolkadotSignOut}/>
+                            <PolkadotProfile account={polkadotSignedInWith} jwtToken={jwtToken} onSignOut={handlePolkadotSignOut}/>
                         ): polkadotAccounts? (
-                            <SignIn
+                            <PolkadotSignIn
                                 accounts={polkadotAccounts}
                                 onCancel={() => setPolkadotAccounts(undefined)}
                                 onSignedIn={handlePolkadotSignedIn}/>
@@ -207,24 +166,18 @@ const Header = () => {
                             <PolkadotConnectButton onAccounts={onPolkadotAccounts}/>
                         )
                     }
-                    {/* {!isEVMConnected &&
-                        <Button _hover={{ color: 'tomato' }} color='white' variant='link' size='sm' onClick={connectEVMWallet}>EVM Login</Button>
+                    {evmSignedInWith ? 
+                        (
+                            <EvmProfile account={evmSignedInWith} onSignOut={handleEvmSignOut}/>
+                        ) : evmAccounts ? (
+                            <EvmSignIn
+                                accounts={evmAccounts}
+                                onCancel={() => setEvmAccounts(undefined)}
+                                onSignedIn={handleEvmSignedIn}/>
+                        ): (
+                            <EvmConnectButton onAccounts={onEvmAccounts}/>
+                        )
                     }
-                    {isEVMConnected &&
-                        <Text _hover={{ color: 'tomato' }} color='white'>{truncateEthAddress(evmAddress)}</Text>
-                    }
-                    {!isPolkadotConnected &&
-                        <Button _hover={{ color: 'tomato' }} color='white' variant='link' size='sm' onClick={connectPolkaWallet}>Polkadot Login</Button>
-                    }
-                    {isPolkadotConnected &&
-                        <Text _hover={{ color: 'tomato' }} color='white'>{polakdotAddress}</Text>
-                    } */}
-                    {/* {!isConnected? ( */}
-                        <ConnectButton label='EVM Connect' showBalance={false}/>
-                    {/* ) : ( */}
-                        {/* <Text _hover={{ color: 'tomato' }} color='white'>{truncateEthAddress(address)}</Text> */}
-                    {/* )} */}
-                    
                 </HStack>
             </Flex>
         </Container>

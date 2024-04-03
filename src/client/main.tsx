@@ -7,11 +7,10 @@ import theme from './theme.ts'
 import Web3Provider from './Web3Provider.js'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <Web3Provider>
+  // <React.StrictMode>
+    
       <ChakraProvider theme={theme}>
         <App/>
       </ChakraProvider>
-    </Web3Provider>
-  </React.StrictMode>,
+  // </React.StrictMode>,
 )

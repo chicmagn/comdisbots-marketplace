@@ -19,7 +19,7 @@ const getApplicationInfo = async (token: any, appId: any) => {
     return response.data;
   };
 
-bots.get("/api/bot", async (req, res) => {
+bots.get("/single", async (req, res) => {
   try {
     const info = await getApplicationInfo(req.query.token, req.query.appId);
     res.status(200).send(info);
@@ -28,7 +28,7 @@ bots.get("/api/bot", async (req, res) => {
   }
 });
 
-bots.post("/api/bot/upvote", async (req, res) => {
+bots.post("/upvote", async (req, res) => {
   try {
     const { botId } = req.body;
     botsDB.findOne({ clientID: botId }, (err: any, doc: any) => {
@@ -56,7 +56,7 @@ bots.post("/api/bot/upvote", async (req, res) => {
   }
 });
 
-bots.get("/api/bots", (req, res) => {
+bots.get("/list", (req, res) => {
   try {
     console.log(req.query);
     const { search, user } = req.query;
@@ -78,7 +78,7 @@ bots.get("/api/bots", (req, res) => {
   }
 });
 
-bots.post("/api/bot/add", async (req, res) => {
+bots.post("/add", async (req, res) => {
   try {
     const {
       botToken,

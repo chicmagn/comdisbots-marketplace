@@ -23,26 +23,12 @@ auth.post('/verifyEVM', async function (req, res) {
             res.status(401).json({ error: "Invalid nonce! Please try again." })
 
         req.session.siwe = message;
-        req.session.cookie.expires = new Date(message.expirationTime);
+        // req.session.cookie.expires = new Date(message.expirationTime);
         req.session.save(() => res.status(200).send(true));
     } catch (e: any) {
         req.session.siwe = null;
         req.session.nonce = null;
-        console.error(e);
-        switch (e) {
-            case ErrorTypes.EXPIRED_MESSAGE: {
-                req.session.save(() => res.status(440).json({ message: e.message }));
-                break;
-            }
-            case ErrorTypes.INVALID_SIGNATURE: {
-                req.session.save(() => res.status(422).json({ message: e.message }));
-                break;
-            }
-            default: {
-                req.session.save(() => res.status(500).json({ message: e.message }));
-                break;
-            }
-        }
+        req.session.save(() => res.status(500).json({ message: e.message }));
     }
 });
 

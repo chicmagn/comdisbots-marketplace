@@ -11,17 +11,14 @@ type Props = {
     onSignOut: () => void
 }
 
-export const Profile: React.FC<Props> = ({account, jwtToken, onSignOut})=> {
+export const PolkadotProfile: React.FC<Props> = ({account, jwtToken, onSignOut})=> {
     const { resolve } = useAzeroID();
     const a0id = useMemo(() => resolve(account.address)?.a0id, [account.address, resolve]);
     return (
         <Button colorScheme="blue" onClick={onSignOut}>
-            {/* <Identicon value={account.address} size={32} theme="polkadot" />
-            <Text>{account.meta.name}</Text>
-            <Text>{a0id ?? truncateMiddle(account.address, 5, 5, "...")}</Text> */}
             <HStack>
                 <Identicon value={account.address} theme="polkadot" size={32}/>    
-                <Text color={'white'}>{a0id?? truncateMiddle(account.address, 5, 5, "...")}</Text>
+                <Text color={'white'}>{truncateMiddle(account.address, 5, 5, "...")}</Text>
             </HStack>
         </Button>
     )
