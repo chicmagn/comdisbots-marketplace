@@ -16,19 +16,12 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { PolkadotConnectButton } from '../polkadot/WalletConnect';
 import { Profile } from '../polkadot/Profile';
 import { SignIn } from '../polkadot/SignInButton';
+import { BrowserProvider } from 'ethers';
+import { useAccount, useSignMessage } from "wagmi";
 
 const Header = () => {
     const url = `${import.meta.env.VITE_DISCORD_AUTH_URL}`;
-
     const navigate = useNavigate();
-
-    const [username, setUsername] = useState('');
-    const [cookie, setCookie] = useCookies(["commune_bot_marketplace"]);
-    const [avatar, setAvatar] = useState('');
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-    const [isEVMConnected, setIsEVMConnected] = useState(false);
-    const [evmAddress, setEvmAddress] = useState('');
 
     // Polkadot.js
     const [polkadotSignedInWith, setPolkadotSignedInWith] = useState<InjectedAccountWithMeta | undefined>()
@@ -76,8 +69,71 @@ const Header = () => {
     }, [polkadotAccounts, handlePolkadotSignOut, polkadotSignedInWith?.address])
 
     // EVM
+    const domain = window.location.host;
+    const origin = window.location.origin;
+    const evmProvider = new BrowserProvider(window.ethereum);
+
+    const { isConnected, address } = useAccount();
+    const handleEvmSignIn = ()=> {
+        // console.log(isConnected, address)
+        evmProvider.send('eth_requestAccounts', []).then(async (data) => {
+            const signer = await evmProvider.getSigner();
+            const message = await createSiweMessage(
+                await signer.getAddress(),
+                'Sign in with Ethereum to Commune Discord Bot Marketplace'
+            );
+            const signature = await signer.signMessage(message);
+
+            const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/auth/verifyEVM`, {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message, signature }),
+                credentials: 'include'
+            });
+            console.log(await res.text());
+        }).catch(() => {
+            console.log('user rejected request');
+            // setIsEVMConnected(false);
+            
+        });
+    };
+    useEffect(()=> {
+      if (isConnected) {
+        handleEvmSignIn();  
+      }
+    }, [isConnected, address]);
+
+    const createSiweMessage = async (address: any, statement: any) => {
+        const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/auth/nonce`, {
+            credentials: 'include',
+        });
+        const message = new SiweMessage({
+            domain,
+            address,
+            statement,
+            uri: origin,
+            version: '1',
+            chainId: 1,
+            nonce: await res.text()
+        });
+        return message.prepareMessage();
+    }
+
+    const getInformation = async () => {
+        const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/auth/userInfo`, {
+            credentials: 'include',
+        });
+        console.log(await res.text());
+    }
 
     // Discord
+    const [username, setUsername] = useState('');
+    const [cookie, setCookie] = useCookies(["commune_bot_marketplace"]);
+    const [avatar, setAvatar] = useState('');
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+
     const logoutDiscord = useCallback(() => {
         setIsLoggedIn(false);
         setCookie('commune_bot_marketplace', null);
@@ -163,7 +219,12 @@ const Header = () => {
                     {isPolkadotConnected &&
                         <Text _hover={{ color: 'tomato' }} color='white'>{polakdotAddress}</Text>
                     } */}
-                    <ConnectButton label='EVM Connect' showBalance={false}/>
+                    {/* {!isConnected? ( */}
+                        <ConnectButton label='EVM Connect' showBalance={false}/>
+                    {/* ) : ( */}
+                        {/* <Text _hover={{ color: 'tomato' }} color='white'>{truncateEthAddress(address)}</Text> */}
+                    {/* )} */}
+                    
                 </HStack>
             </Flex>
         </Container>
