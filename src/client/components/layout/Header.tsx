@@ -126,7 +126,7 @@ const Header = () => {
                 <HStack spacing='1.5rem' >
                     <Link to='/home'><Text _hover={{ color: 'tomato' }} color='white'>Home</Text></Link>
                     <Link to='/bots'><Text _hover={{ color: 'tomato' }} color='white'>Bots</Text></Link>
-                    <Link to='/servers'><Text _hover={{ color: 'tomato' }} color='white'>Servers</Text></Link>
+                    {/* <Link to='/servers'><Text _hover={{ color: 'tomato' }} color='white'>Servers</Text></Link> */}
                     <Link to='/emojis'><Text _hover={{ color: 'tomato' }} color='white'>Emojis</Text></Link>
                     <Link to='https://github.com/chicmagn/discord-bot-marketplace'><HStack><Image src={githubLogo} w='1rem' h='1rem' /><Text color='white'>Source Code</Text></HStack></Link>
                     {isLoggedIn ?
@@ -139,9 +139,9 @@ const Header = () => {
                                     </MenuButton>
                                     <MenuList>
                                         <MenuItem onClick={() => navigate('/bots/mine')}>My Bots</MenuItem>
-                                        <MenuItem onClick={() => navigate('/servers/mine')}>My Servers</MenuItem>
+                                        {/* <MenuItem onClick={() => navigate('/servers/mine')}>My Servers</MenuItem> */}
                                         <MenuItem onClick={() => navigate('/bots/add')}>Submit Bot</MenuItem>
-                                        <MenuItem onClick={() => navigate('/servers/add')}>Add Server</MenuItem>
+                                        {/* <MenuItem onClick={() => navigate('/servers/add')}>Add Server</MenuItem> */}
                                         <MenuItem onClick={logoutDiscord}>Logout</MenuItem>
                                     </MenuList>
                                 </Menu>

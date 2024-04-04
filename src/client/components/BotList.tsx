@@ -15,7 +15,7 @@ const BotList = (props: any) => {
         if (props.search === 'mine')
             url = `${import.meta.env.VITE_SERVER_URL}/bots/list?search=${props.search}&user=${cookie['commune_bot_marketplace']['id']}`
         else 
-            url = `${import.meta.env.VITE_SERVER_URL}/bots?list?search=${props.search}`;
+            url = `${import.meta.env.VITE_SERVER_URL}/bots/list?search=${props.search}`;
         axios.get(url).then((response: any)=> {
             const data = response.data;
             if (data.success){

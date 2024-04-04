@@ -43,8 +43,8 @@ const Home = () => {
                 <BotList search='top'/>
                 <Text fontSize='4xl' color='white'>New Bots</Text>
                 <BotList search='new'/>
-                <Text fontSize='4xl' color='white'>Largest Servers</Text>
-                <ServerList />
+                {/* <Text fontSize='4xl' color='white'>Largest Servers</Text> */}
+                {/* <ServerList /> */}
             </VStack>
         </Box>
     )
